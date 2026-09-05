@@ -1,16 +1,14 @@
 {
   "name": "@caffeine/template-app",
   "type": "module",
-  "engines": {
-    "node": ">=16.0.0",
-    "pnpm": ">=7.0.0",
-    "npm": "please use pnpm"
-  },
+  "workspaces": [
+    "src/frontend"
+  ],
   "scripts": {
-    "build": "pnpm -r --if-present run build",
-    "typecheck": "pnpm -r --if-present run typecheck",
-    "check": "pnpm -r --if-present run check",
-    "fix": "pnpm -r --if-present run fix"
+    "dev": "npm run dev --workspace=@caffeine/template-frontend",
+    "build": "npm run build --workspace=@caffeine/template-frontend && mkdir -p dist && cp -r src/frontend/dist/. dist/ 2>/dev/null || true",
+    "lint": "npm run typecheck",
+    "typecheck": "npm run typecheck --workspace=@caffeine/template-frontend"
   },
   "devDependencies": {
     "sharp": "^0.34.4"

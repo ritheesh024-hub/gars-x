@@ -1,0 +1,6 @@
+{
+  "name": "GrasX",
+  "description": "Crack placements faster with roadmap, quiz arena, coding practice, resume builder, and AI assistant.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

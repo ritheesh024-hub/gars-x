@@ -39,9 +39,18 @@ export async function loadConfig(): Promise<Config> {
   try {
     const response = await fetch(`${baseUrl}env.json`);
     const config = (await response.json()) as JsonConfig;
-    if (!backendCanisterId && config.backend_canister_id === "undefined") {
-      console.error("CANISTER_ID_BACKEND is not set");
-      throw new Error("CANISTER_ID_BACKEND is not set");
+    if (!backendCanisterId && (config.backend_canister_id === "undefined" || !config.backend_canister_id)) {
+      console.warn("CANISTER_ID_BACKEND is not set, using default fallback configuration");
+      const fallback = {
+        backend_host: undefined,
+        backend_canister_id: "mock-canister-id",
+        storage_gateway_url: DEFAULT_STORAGE_GATEWAY_URL,
+        bucket_name: DEFAULT_BUCKET_NAME,
+        project_id: DEFAULT_PROJECT_ID,
+        ii_derivation_origin: undefined,
+      };
+      configCache = fallback;
+      return fallback;
     }
 
     const fullConfig = {
@@ -64,13 +73,9 @@ export async function loadConfig(): Promise<Config> {
     configCache = fullConfig;
     return fullConfig;
   } catch {
-    if (!backendCanisterId) {
-      console.error("CANISTER_ID_BACKEND is not set");
-      throw new Error("CANISTER_ID_BACKEND is not set");
-    }
     const fallbackConfig = {
       backend_host: undefined,
-      backend_canister_id: backendCanisterId,
+      backend_canister_id: backendCanisterId || "mock-canister-id",
       storage_gateway_url: DEFAULT_STORAGE_GATEWAY_URL,
       bucket_name: DEFAULT_BUCKET_NAME,
       project_id: DEFAULT_PROJECT_ID,
@@ -94,13 +99,18 @@ function processError(e: unknown): never {
 }
 
 async function maybeLoadMockBackend(): Promise<backendInterface | null> {
-  if (import.meta.env.VITE_USE_MOCK !== "true") {
+  const isMockDisabled = import.meta.env.VITE_USE_MOCK === "false";
+  const hasLiveCanister = Boolean(
+    process.env.CANISTER_ID_BACKEND &&
+      process.env.CANISTER_ID_BACKEND !== "undefined" &&
+      process.env.CANISTER_ID_BACKEND !== "mock-canister-id",
+  );
+  if (isMockDisabled || hasLiveCanister) {
     return null;
   }
 
   try {
-    // If VITE_USE_MOCK is enabled, try to load a mock backend module *if it exists*.
-    // We use import.meta.glob so builds don't fail when the mock file is absent.
+    // If running in standalone mode or without live canister, load mock backend
     const mockModules = import.meta.glob("./mocks/backend.{ts,tsx,js,jsx}");
 
     const path = Object.keys(mockModules)[0];

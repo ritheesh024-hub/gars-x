@@ -4,9 +4,10 @@
   "version": "0.0.0",
   "type": "module",
   "scripts": {
-    "build:skip-bindings": "vite build && pnpm copy:env",
-    "build": "vite build && pnpm copy:env",
-    "copy:env": "cp env.json dist/",
+    "dev": "vite --host 0.0.0.0 --port 3000",
+    "build:skip-bindings": "vite build && npm run copy:env",
+    "build": "vite build && npm run copy:env",
+    "copy:env": "cp env.json dist/ || true",
     "typecheck": "tsc --noEmit --pretty",
     "check": "biome check src",
     "fix": "biome check --write src"
